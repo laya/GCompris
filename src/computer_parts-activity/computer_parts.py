@@ -21,8 +21,10 @@ import gtk.gdk
 import gcompris
 import gcompris.utils
 import gcompris.skin
+import gcompris.bonus
 import goocanvas
 import pango
+import ConfigParser
 
 from gcompris import gcompris_gettext as _
 
@@ -43,6 +45,10 @@ class Gcompris_computer_parts:
     # Save the gcomprisBoard, it defines everything we need
     # to know from the core
     self.gcomprisBoard = gcomprisBoard
+    self.gcomprisBoard.level = 1
+    self.gcomprisBoard.maxlevel = 2
+    self.gcomprisBoard.sublevel = 1
+    self.gcomprisBoard.number_of_sublevel = 2
 
     # Needed to get key_press
     gcomprisBoard.disable_im_context = True
@@ -62,16 +68,8 @@ class Gcompris_computer_parts:
     self.rootitem = goocanvas.Group(parent =
                                     self.gcomprisBoard.canvas.get_root_item())
 
-    goocanvas.Text(
-      parent = self.rootitem,
-      x=400.0,
-      y=100.0,
-      text=_("This is the first plugin in GCompris coded in the Python\n"
-             "Programming language."),
-      fill_color="black",
-      anchor = gtk.ANCHOR_CENTER,
-      alignment = pango.ALIGN_CENTER
-      )
+    self.read_data()
+    self.display_explorer()
 
   def end(self):
     print "computer_parts end"
@@ -108,3 +106,102 @@ class Gcompris_computer_parts:
   def set_level(self, level):
     print("computer_parts set level. %i" % level)
 
+
+  def read_data(self):
+    '''Load the activity data'''
+    config = ConfigParser.RawConfigParser()
+    p = gcompris.get_properties()
+    filename = gcompris.DATA_DIR + '/' + self.gcomprisBoard.name + '/activity.desktop'
+    try:
+      gotit = config.read(filename)
+      if not gotit:
+        gcompris.utils.dialog(_("Cannot find the file '{filename}'").format(filename=filename), None)
+        return False
+
+    except ConfigParser.Error, error:
+      gcompris.utils.dialog(_("Failed to parse data set '{filename}' with error:\n{error}").
+        format(filename=filename, error=error), None)
+      return False
+
+    self.dataset = config
+    return True
+
+  # Draws explorer screen items
+  def display_explorer(self):
+    gcompris.bar_location(660, -1, 0.5)
+
+    self.desc_tb = gtk.TextBuffer()
+    self.desc_tv = gtk.TextView(self.desc_tb)
+    self.desc_tv.set_editable(False)
+    self.desc_tb.set_text(_("Mouse-over any part"))
+    # self.desc_tb.set_font(gcompris.skin.get_font("gcompris/board/medium"))
+    self.desc_tv.set_wrap_mode(gtk.WRAP_CHAR)
+
+    self.widget = goocanvas.Widget(parent = self.rootitem,
+                                   widget = self.desc_tv,
+                                   x = 30,
+                                   y = 400,
+                                   width = 600,
+                                   height = 100,
+                                   anchor = gtk.ANCHOR_NW,
+                                   )
+    # self.desc_tv.show()
+
+    self.part_pos_x = 100
+    self.part_pos_y = 100
+
+    for i in range(1,7):
+      name = str(self.dataset.get(str(i), "name"))
+      desc = str(self.dataset.get(str(i), "desc"))
+      img = str(self.dataset.get(str(i), "image"))
+      Part(self, name, desc, img, self.part_pos_x, self.part_pos_y)
+
+      self.part_pos_x += 150
+      if i == 3:
+        self.part_pos_x = 100
+        self.part_pos_y += 150
+
+  def show_desc(self, desc):
+    self.desc_tb.set_text(_(desc))
+
+  def clear_desc(self):
+    self.desc_tb.set_text(_("Mouse-over any part"))
+
+
+class Part:
+  # name is name of the part
+  # desc is description about the part
+  # img is the path to the image
+  # x and y are position of the part
+  def __init__(self, computer_parts, name, desc, img, x, y):
+    print "creating " + str(name)
+    self.rootitem = computer_parts.rootitem
+    self.image = gcompris.utils.load_pixmap(img)
+    self.cp = computer_parts
+
+    self.name = name
+    self.desc = desc
+    self.x = x
+    self.y = y
+    self.width = 100
+    self.height = 100
+
+    if name == "Keyboard":
+      self.width = 200
+
+    self.part_item = goocanvas.Image(parent = self.rootitem,
+                                     pixbuf = self.image,
+                                     x = self.x,
+                                     y = self.y,
+                                     width = self.width,
+                                     height = self.height,
+                                     )
+    self.part_item.connect("enter_notify_event", self.show_desc, self)
+    self.part_item.connect("leave_notify_event", self.clear_desc, self)
+    gcompris.utils.item_focus_init(self.part_item, None)
+
+  def show_desc(self, widget, target, event, item):
+    self.cp.show_desc(self.desc)
+
+  def clear_desc(self, widget, target, event, item):
+    self.cp.clear_desc()
