@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GCompris>
+  <Board
+        name="decryption"
+        type="python:decryption"
+        section="/experimental"
+        icon="decryption.png"
+        difficulty="1"
+        author="lavanya (lavanyagunasekar@gmail.com)"
+        boarddir=""
+        >
+        <_title>Decryption</_title>
+        <_description></_description>
+        <_prerequisite>Basic understanding of substitution algorithm</_prerequisite>
+        <_goal>To teach decryption technique in cryptography</_goal>
+        <_manual></_manual>
+        <_credit></_credit>
+  </Board>
+  <Data directory=""/>
+</GCompris>
