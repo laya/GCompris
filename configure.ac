@@ -512,7 +512,7 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)
 
 dnl Autoconf output
-AC_OUTPUT([
+AC_OUTPUT([ src/computer_parts-activity/Makefile
 Makefile
 Makefile.mingw
 autopackage/Makefile
