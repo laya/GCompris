@@ -10,7 +10,7 @@
         boarddir=""
         >
         <title>Decryption</title>
-        <description></description>
+        <description>Learn to decrypt encrypted texts</description>
         <prerequisite>Basic understanding of substitution algorithm</prerequisite>
         <goal>To teach decryption technique in cryptography</goal>
         <manual></manual>
