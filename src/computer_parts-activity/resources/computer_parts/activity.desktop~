@@ -1,0 +1,60 @@
+[1]
+name=CPU
+desc=Central Processing Unit (CPU) is the hardware within a computer that carries out the instructions of a computer program by performing the basic arithmetical, logical, and input/output operations of the system.
+image=computer_parts/cpu.png
+
+[2]
+name=Monitor
+desc=Monitor or display is an electronic visual display for computers.
+image=computer_parts/monitor.png
+
+[3]
+name=Keyboard
+desc=Keyboard is the set of typewriter-like keys that enables you to enter data into a computer.
+image=computer_parts/keyboard.png
+
+[4]
+name=Mouse
+desc=Mouse is a pointing device that functions by detecting motion relative to its supporting surface.
+image=computer_parts/mouse.png
+
+[5]
+name=Speakers
+desc=Speakers receive audio input from the computer's sound card and produce audio output in the form of sound waves.
+image=computer_parts/speakers.png
+
+[6]
+name=Printer
+desc=Printer produces a representation of an electronic document on physical media such as paper or transparency film.
+image=computer_parts/printer.png
+
+[7]
+name=Harddisk
+desc=HDD(Hard Disk Drive) is a drive that can read and write on magnetically coated platter.
+image=computer_parts/hdd.png
+
+[8]
+name=Motherboard
+desc=It holds many of the crucial electronic components of the system, such as the central processing unit (CPU) and memory, and provides connectors for other peripherals.
+image=computer_parts/motherboard.png
+
+[9]
+name=Processor
+desc=Processor is the hardware within a computer that carries out the instructions of a computer program by performing the basic arithmetical, logical, and input/output operations of the system.
+image=computer_parts/processor.png
+
+[10]
+name=RAM
+desc=Random Access Memory (RAM) is a random-access device, allows stored data to be accessed directly in any random order.
+image=computer_parts/ram.png
+
+[11]
+name=ROM
+desc=Read-only memory (ROM) is a class of storage medium used in computers and other electronic devices. Data stored in ROM cannot be modified.
+image=computer_parts/rom.png
+
+[12]
+name=SMPS
+desc=A switched-mode power supply is an electronic power supply that incorporates a switching regulator to convert electrical power efficiently.
+image=computer_parts/smps.png
+
