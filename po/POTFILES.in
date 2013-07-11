@@ -501,3 +501,5 @@ src/wordprocessor-activity/wordprocessor.c
 src/wordprocessor-activity/wordprocessor.xml.in
 src/wordsgame-activity/wordsgame.c
 src/wordsgame-activity/wordsgame.xml.in
+src/computer_parts-activity/computer_parts.xml.in
+src/computer_parts-activity/computer_parts.py
