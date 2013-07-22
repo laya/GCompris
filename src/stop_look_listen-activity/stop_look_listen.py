@@ -22,9 +22,10 @@ import gtk.gdk
 import gcompris
 import gcompris.utils
 import gcompris.skin
+import gcompris.bonus
+import gcompris.sound
 import goocanvas
 import pango
-import time
 import random
 
 from gcompris import gcompris_gettext as _
@@ -54,20 +55,12 @@ class Gcompris_stop_look_listen:
     print "stop_look_listen start"
 
     # Set the buttons we want in the bar
-    gcompris.bar_set(gcompris.BAR_LEVEL)
 
     # Set a background image
-    gcompris.set_default_background(self.gcomprisBoard.canvas.get_root_item())
+    #gcompris.set_default_background(self.gcomprisBoard.canvas.get_root_item())
 
     self.timerinc = 20
     self.step_time = 100
-
-
-    self.sign_items = []
-    self.sign_seq = [1, 2]
-    for i in self.sign_seq:
-      self.sign_items.append("#SIGN_" + str(i))
-
 
     # Create our rootitem. We put each canvas item in it so at the end we
     # only have to kill it. The canvas deletes all the items it contains
@@ -82,6 +75,7 @@ class Gcompris_stop_look_listen:
                             svg_id = "#BACKGROUND",
                             pointer_events = goocanvas.EVENTS_NONE
                             )
+    self.bg.lower(None)
 
     # Store Steering Wheels in a list
     self.steering_items = []
@@ -92,18 +86,10 @@ class Gcompris_stop_look_listen:
     # Create Steering Wheel
     Steering(self, self.svghandle, self.steering_items)
 
-    # Sign board
-    self.sign_items = []
-    self.sign_seq = [1,2]
-    for i in self.sign_seq:
-      self.sign_items.append("#SIGN_" + str(i))
+    gcompris.bar_set(gcompris.BAR_LEVEL)
+    gcompris.bar_location(630, -1, 0.5)
 
-    self.sign = goocanvas.Svg(parent = self.rootitem,
-                              svg_handle = self.svghandle,
-                              svg_id = self.sign_items[0],
-                              visibility = goocanvas.ITEM_INVISIBLE
-                              )
-    
+        
   def end(self):
     print "stop_look_listen end"
     # Remove the root item removes all the others inside it
@@ -223,9 +209,10 @@ class Sign:
 
     self.stand = goocanvas.Svg(parent = self.rootitem,
                                svg_handle = svghandle,
-                               svg_id = "#STAND"
+                               svg_id = "#STAND",
+                               visibility = goocanvas.ITEM_INVISIBLE
                                )
-    self.signs = None
+    self.sign = None
 
     self.sign_items = []
     self.sign_seq = range(1, 21)
@@ -233,12 +220,23 @@ class Sign:
     for i in self.sign_seq:
       self.sign_items.append("#SIGN_" + str(i))
 
+    self.sign_stack = self.sign_items[:]
+
     self.signboard = goocanvas.Svg(parent = self.rootitem,
                                    svg_handle = svghandle,
                                    svg_id = self.sign_items[0],
                                    visibility = goocanvas.ITEM_INVISIBLE,
                                    )
 
+    '''
+    self.cloud = goocanvas.Svg(parent = self.rootitem,
+                               svg_handle = svghandle,
+                               svg_id = "#CLOUD",
+                               pointer_events = goocanvas.EVENTS_NONE,
+                               visibility = goocanvas.ITEM_INVISIBLE
+                               )
+    '''
+ 
     self.sign_dict = {"#SIGN_1": "No right turn",
                       "#SIGN_2": "National Truck Network Route",
                       "#SIGN_3": "Men at work",
@@ -270,10 +268,12 @@ class Sign:
     self.stand.set_property("visibility", goocanvas.ITEM_INVISIBLE)
     
   def show_sign(self):
-    temp = random.randrange(1, 21)
-    print "temp: ", temp
-    self.sign = self.sign_items[temp]
-    print "id: ", self.sign
+    if len(self.sign_stack) == 0:
+      self.sign_stack = self.sign_items[:]
+    random.shuffle(self.sign_stack)
+    print "stack: ", self.sign_stack
+    self.sign = self.sign_stack.pop()
+    # self.sign = self.sign_items[temp]
     self.signboard.set_property("svg_id", self.sign)
     self.signboard.set_property("visibility", goocanvas.ITEM_VISIBLE)
     self.question.show()
@@ -286,57 +286,85 @@ class Question:
   def __init__(self, sign, svghandle):
     self.rootitem = sign.rootitem
     self.sign = sign 
-    self.signs = sign.signs
 
-    self.question = goocanvas.Text(parent = self.rootitem,
-                              x = 300,
-                              y = 300,
-                              fill_color = "green",
-                              font = gcompris.skin.get_font("gcompris/subtitle"),
-                              anchor = gtk.ANCHOR_CENTER,
-                              text = "What is the sign?",
-                              visibility = goocanvas.ITEM_INVISIBLE
-                              )
+    self.white = goocanvas.Rect(parent = self.rootitem,
+                                x = 80,
+                                y = 70,
+                                width = 500,
+                                height = 200,
+                                fill_color = "white",
+                                visibility = goocanvas.ITEM_INVISIBLE
+                                )
 
-    self.x = 300
-    self.y = 200
+    self.quest = goocanvas.Text(parent = self.rootitem,
+                                x = 200,
+                                y = 80,
+                                fill_color = "black",
+                                text = "What is that signboard for?",
+                                visibility = goocanvas.ITEM_INVISIBLE
+                                )
 
-    self.options = []
-    self.opt_text = []
-    for i in range(4):
-      if i == 2:
-        self.x = 300
-        self.y += 50
-      self.x += 110
+  def answered(self, event, target, item, text):
+    if text == self.sign.sign_dict[self.sign.sign]:
+      gcompris.sound.play_ogg("sounds/tuxok.wav")
+      gcompris.bonus.display(gcompris.bonus.WIN, gcompris.bonus.TUX)
+      self.sign.car.render()
+      self.sign.car.road.start()
+      self.sign.hide_sign()
+      self.sign.hide_stand()
+      self.hide()
+    else:
+      gcompris.bonus.display(gcompris.bonus.LOOSE, gcompris.bonus.TUX)
 
-      self.options.append(goocanvas.Rect(
-        parent = self.rootitem,
-        x = self.x,
-        y = self.y,
-        width = 100,
-        height = 30,
-        stroke_color = "red",
-        fill_color = "yellow",
-        line_width = 2.0,
-        visibility = goocanvas.ITEM_INVISIBLE
-        )
-      )
-      gcompris.utils.item_focus_init(self.options[i], None)
-
-      self.options[i].connect("button_press_event",
-                              self.answered)
-
-  def answered(self, event, target, item):
-    self.sign.car.render()
-    self.sign.car.road.start()
-    self.sign.hide_sign()
-    self.sign.hide_stand()
-    self.hide()
 
   def show(self):
+    self.white.set_property("visibility", goocanvas.ITEM_VISIBLE)
+    self.quest.set_property("visibility", goocanvas.ITEM_VISIBLE)
+
+    self.x = 100
+    self.y = 130
+
+    # Form the options.
+    self.opt_text = [self.sign.sign_dict[self.sign.sign]]
+    # Add other 3 unique options in the options list.
+    for i in range(3):
+      while True:
+        temp = random.randrange(20)
+        print "comparing: ", self.sign.sign, " and ", self.sign.sign_items[temp]
+        if self.sign.sign != self.sign.sign_items[temp]:
+          self.opt_text.append(self.sign.sign_dict[self.sign.sign_items[temp]])
+          break
+
+    print "options :", self.opt_text
+    random.shuffle(self.opt_text)
+    print self.opt_text
+    self.options = []
+    self.opt_button = []
     for i in range(4):
-      self.options[i].set_property("visibility", goocanvas.ITEM_VISIBLE)
+      print self.x
+      self.opt_button.append(goocanvas.Text(parent = self.rootitem,
+                     x = self.x,
+                     y = self.y,
+                     width = 240,
+                     fill_color = "green",
+                     font = gcompris.skin.get_font("gcompris/subtitle"),
+                     #anchor = gtk.ANCHOR_CENTER,
+                     text = self.opt_text[i]
+                     ))
+      gcompris.utils.item_focus_init(self.opt_button[i], None)
+
+      self.opt_button[i].connect("button_press_event",
+                     self.answered, self.opt_text[i])
+
+      if i == 1:
+        self.x = 100
+        self.y += 80
+      else:
+        self.x += 250
+
 
   def hide(self):
+    self.quest.set_property("visibility", goocanvas.ITEM_INVISIBLE)
+    self.white.set_property("visibility", goocanvas.ITEM_INVISIBLE)
     for i in range(4):
-      self.options[i].set_property("visibility", goocanvas.ITEM_INVISIBLE)
+      self.opt_button[i].set_property("visibility", goocanvas.ITEM_INVISIBLE)
